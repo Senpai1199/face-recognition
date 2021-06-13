@@ -92,6 +92,7 @@ for i in range(0, detections.shape[2]):
 		preds = recognizer.predict_proba(vec)[0]
 		j = np.argmax(preds)
 		proba = preds[j]
+		print("**Possible Labels**: ", le.classes_)
 		name = le.classes_[j]
 
 		# draw the bounding box of the face along with the associated
