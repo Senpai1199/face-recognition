@@ -5,3 +5,4 @@ opencv-python==4.5.1.48
 Pillow==8.2.0
 protobuf==3.17.3
 six==1.16.0
+Flask==2.0.1
