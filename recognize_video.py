@@ -51,6 +51,10 @@ time.sleep(2.0)
 
 # start the FPS throughput estimator
 fps = FPS().start()
+face_colors_init = (0,0,0)
+bg_colors_init = (0,0,0)
+frame_init = 0
+
 
 # loop over frames from the video file stream
 while True:
@@ -117,10 +121,27 @@ while True:
 			cv2.putText(frame, text, (startX, y),
 				cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
 
+			bg = frame.copy()
+			cv2.rectangle(bg, (startX, startY), (endX, endY), (0,0,0), -1)
+
+			if np.all(face_colors_init) == 0:
+				face_colors_init = np.mean(face, axis=(0, 1))
+				bg_colors_init = np.sum(bg, axis=(0, 1))/(bg.shape[0]*bg.shape[1] - face.shape[0]*face.shape[1])
+				frame_init = frame.copy()
+
+			face_colors = np.mean(face, axis=(0, 1))
+			bg_colors = np.sum(bg, axis=(0, 1))/(bg.shape[0]*bg.shape[1] - face.shape[0]*face.shape[1])
+
+			# print
+			print(face.shape, type(face), np.subtract(face_colors, face_colors_init), np.subtract(bg_colors, bg_colors_init))
+
 	# update the FPS counter
 	fps.update()
 
 	# show the output frame
+	#comment out next 2 lines for normal stream
+	frame -= frame_init
+	frame[frame < 0] = 255
 	cv2.imshow("Frame", frame)
 	key = cv2.waitKey(1) & 0xFF
 
