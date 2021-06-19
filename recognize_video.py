@@ -1,8 +1,10 @@
 # USAGE
-# python recognize_video.py --detector face_detection_model \
-#	--embedding-model openface_nn4.small2.v1.t7 \
-#	--recognizer output/recognizer.pickle \
-#	--le output/le.pickle
+"""
+python recognize_video.py --detector face_detection_model \
+	--embedding-model openface_nn4.small2.v1.t7 \
+	--recognizer output/recognizer.pickle \
+	--le output/le.pickle
+"""
 
 # import the necessary packages
 from imutils.video import VideoStream
@@ -14,6 +16,8 @@ import pickle
 import time
 import cv2
 import os
+from scipy.ndimage.filters import gaussian_filter
+from PIL import Image, ImageChops 
 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
@@ -54,6 +58,7 @@ fps = FPS().start()
 face_colors_init = (0,0,0)
 bg_colors_init = (0,0,0)
 frame_init = 0
+frames = []
 
 
 # loop over frames from the video file stream
@@ -128,6 +133,13 @@ while True:
 				face_colors_init = np.mean(face, axis=(0, 1))
 				bg_colors_init = np.sum(bg, axis=(0, 1))/(bg.shape[0]*bg.shape[1] - face.shape[0]*face.shape[1])
 				frame_init = frame.copy()
+			
+			frames.append(frame)
+			if len(frames) > 40:
+				# print(np.array(frames).shape)
+				del(frames[0])
+				# frame = np.mean(frames, axis=(0))
+				# print(np.array(frame).shape)
 
 			face_colors = np.mean(face, axis=(0, 1))
 			bg_colors = np.sum(bg, axis=(0, 1))/(bg.shape[0]*bg.shape[1] - face.shape[0]*face.shape[1])
@@ -140,9 +152,24 @@ while True:
 
 	# show the output frame
 	#comment out next 2 lines for normal stream
-	frame -= frame_init
-	frame[frame < 0] = 255
-	cv2.imshow("Frame", frame)
+	# if len(frames) > 5:
+	# 	frame = np.average(frames[0:5], axis=(0), weights=np.array([1,2,3,4,5], dtype=np.uint8))
+	# frame[frame < 0] *= -1
+	# print(frame.shape)
+	
+	# frame[frame < 50] = 0
+	# frame[frame > 200] = 0
+	# kernel = np.ones((5, 5), np.uint8)
+	# cv2.dilate(frame, kernel, iterations = 1)
+	# frame = np.absolute(frame)
+	# blurred = gaussian_filter(frame, sigma=1)
+	# frame = cv2.fastNlMeansDenoisingColored(frame,None,10,10,7,21)
+	# np.absolute(frame)
+
+	# frame = frames[0] - frames[-1]
+	frame = ImageChops.subtract(Image.fromarray(frames[-1]), Image.fromarray(frame_init), scale=0.25)
+	# print(np.array(frames)[0].shape, '$')
+	cv2.imshow("Frame", np.array(frame))
 	key = cv2.waitKey(1) & 0xFF
 
 	# if the `q` key was pressed, break from the loop
