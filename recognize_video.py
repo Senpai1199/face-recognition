@@ -1,9 +1,6 @@
 # USAGE
 """
-python recognize_video.py --detector face_detection_model \
-	--embedding-model openface_nn4.small2.v1.t7 \
-	--recognizer output/recognizer.pickle \
-	--le output/le.pickle
+python recognize_video.py --detector face_detection_model --embedding-model openface_nn4.small2.v1.t7 --recognizer output/recognizer.pickle --le output/le.pickle --username akshay@salesforce.com
 """
 
 # import the necessary packages
@@ -31,6 +28,8 @@ ap.add_argument("-l", "--le", required=True,
 	help="path to label encoder")
 ap.add_argument("-c", "--confidence", type=float, default=0.5,
 	help="minimum probability to filter weak detections")
+ap.add_argument("-u","--username", required=True,
+	help="Username of the person logging in.")
 args = vars(ap.parse_args())
 
 # load our serialized face detector from disk
@@ -44,8 +43,13 @@ detector = cv2.dnn.readNetFromCaffe(protoPath, modelPath)
 print("[INFO] loading face recognizer...")
 embedder = cv2.dnn.readNetFromTorch(args["embedding_model"])
 
+# logic to get the name from email-id
+username = 	get_username()
+processed_name = username.split('@')[0]
+
 # load the actual face recognition model along with the label encoder
-recognizer = pickle.loads(open(args["recognizer"], "rb").read())
+recognizer = pickle.loads(open('output/'+processed_name+'.pickle', "rb").read()) ###################
+# print(recognizer)
 le = pickle.loads(open(args["le"], "rb").read())
 
 # initialize the video stream, then allow the camera sensor to warm up
@@ -111,15 +115,25 @@ while True:
 			embedder.setInput(faceBlob)
 			vec = embedder.forward()
 
+			# vec is 128-D embedding of the given frame
 			# perform classification to recognize the face
-			preds = recognizer.predict_proba(vec)[0]
-			j = np.argmax(preds)
-			proba = preds[j]
-			name = le.classes_[j]
+			# print(vec)
+			# diff = np.cosine_similarity(vec[0],recognizer["embeddings"])
+			a = vec[0]
+			b = recognizer["embeddings"][0]
+			# print(a.shape,"        ",len(b))
+			cos_sim = np.dot(a, b)/(np.linalg.norm(a)*np.linalg.norm(b))
+			print(cos_sim)
+
+			# preds = recognizer.predict_proba(vec)[0]
+			# j = np.argmax(preds)
+			# proba = preds[j]
+			# name = le.classes_[j]
+			name = processed_name
 
 			# draw the bounding box of the face along with the
 			# associated probability
-			text = "{}: {:.2f}%".format(name, proba * 100)
+			text = "{}: {:.2f}%".format(name, cos_sim * 100)
 			y = startY - 10 if startY - 10 > 10 else startY + 10
 			cv2.rectangle(frame, (startX, startY), (endX, endY),
 				(0, 0, 255), 2)
@@ -145,7 +159,7 @@ while True:
 			bg_colors = np.sum(bg, axis=(0, 1))/(bg.shape[0]*bg.shape[1] - face.shape[0]*face.shape[1])
 
 			# print
-			print(face.shape, type(face), np.subtract(face_colors, face_colors_init), np.subtract(bg_colors, bg_colors_init))
+			# print(face.shape, type(face), np.subtract(face_colors, face_colors_init), np.subtract(bg_colors, bg_colors_init))
 
 	# update the FPS counter
 	fps.update()
@@ -167,7 +181,7 @@ while True:
 	# np.absolute(frame)
 
 	# frame = frames[0] - frames[-1]
-	frame = ImageChops.subtract(Image.fromarray(frames[-1]), Image.fromarray(frame_init), scale=0.25)
+	frame = ImageChops.subtract(Image.fromarray(frames[-1]), Image.fromarray(frame_init), scale=0.1)
 	# print(np.array(frames)[0].shape, '$')
 	cv2.imshow("Frame", np.array(frame))
 	key = cv2.waitKey(1) & 0xFF

@@ -1,6 +1,5 @@
 # USAGE
-# python extract_embeddings.py --dataset dataset --embeddings output/embeddings.pickle \
-#	--detector face_detection_model --embedding-model openface_nn4.small2.v1.t7
+# python extract_embeddings.py --dataset dataset --embeddings output/ --detector face_detection_model --embedding-model openface_nn4.small2.v1.t7
 
 # import the necessary packages
 from imutils import paths
@@ -42,8 +41,8 @@ imagePaths = list(paths.list_images(args["dataset"]))
 
 # initialize our lists of extracted facial embeddings and
 # corresponding people names
-knownEmbeddings = []
-knownNames = []
+# knownEmbeddings = []
+# knownNames = []
 
 # initialize the total number of faces processed
 total = 0
@@ -106,13 +105,21 @@ for (i, imagePath) in enumerate(imagePaths):
 
 			# add the name of the person + corresponding face
 			# embedding to their respective lists
+			knownEmbeddings = []
+			knownNames = []
 			knownNames.append(name)
 			knownEmbeddings.append(vec.flatten())
+
+			person_data = {"embeddings": knownEmbeddings, "names": knownNames}
+			processed_name = name.split('@')[0]
+			f = open(args["embeddings"]+'/'+processed_name+'.pickle',"wb")
+			f.write(pickle.dumps(person_data))
+			f.close()
 			total += 1
 
 # dump the facial embeddings + names to disk
 print("[INFO] serializing {} encodings...".format(total))
-data = {"embeddings": knownEmbeddings, "names": knownNames}
-f = open(args["embeddings"], "wb")
-f.write(pickle.dumps(data))
-f.close()
+# data = {"embeddings": knownEmbeddings, "names": knownNames}
+# f = open(args["embeddings"], "wb")
+# f.write(pickle.dumps(data))
+# f.close()
