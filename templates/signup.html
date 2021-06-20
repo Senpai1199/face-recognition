@@ -6,14 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up!</title>
 </head>
+<script type="text/javascript" src="{{url_for('static', filename='p5.min.js')}}"></script>
+
 <body>
-    <form action="">
-        <label for="">Enter Email</label>
-        <input type="text"></input>
+    <form action="/signup" enctype="multipart/form-data" method="post">
+        <label for="">Enter Email</label> 
+        <input type="text" name="email"></input><br>
         <label for="">Enter Password</label>
-        <input type="password"></input>
+        <input type="password" name="password1"></input><br>
         <label for="">Confirm Password</label>
-        <input type="password"></input>
+        <input type="password" name="password2"></input><br>
+        <br>
+        <button>SIGN UP</button>
     </form>    
+    <script>
+        function setup() {
+            noCanvas();
+            const video = new createCapture(VIDEO);
+        }
+    </script>
 </body>
 </html>
