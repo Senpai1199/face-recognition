@@ -4,26 +4,65 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up!</title>
+    <link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
+    <title>Welcome!</title>
 </head>
-<script type="text/javascript" src="{{url_for('static', filename='p5.min.js')}}"></script>
-
+<script type="text/javascript" src="{{url_for('static', filename='animate.js')}}"></script>
 <body>
-    <form action="/signup" enctype="multipart/form-data" method="post">
-        <label for="">Enter Email</label> 
-        <input type="text" name="email"></input><br>
-        <label for="">Enter Password</label>
-        <input type="password" name="password1"></input><br>
-        <label for="">Confirm Password</label>
-        <input type="password" name="password2"></input><br>
-        <br>
-        <button>SIGN UP</button>
-    </form>    
-    <script>
-        function setup() {
-            noCanvas();
-            const video = new createCapture(VIDEO);
-        }
-    </script>
+    <h2>WELCOME!</h2>
+    <div class="container" id="container">
+        <div class="form-container sign-up-container">
+            <form action="/signup" method="post">
+                <h1>Create Account</h1>
+                <!-- <div class="social-container">
+                    <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social"><i class="fab fa-google-plus-g"></i></a>
+                    <a href="#" class="social"><i class="fab fa-linkedin-in"></i></a>
+                </div> -->
+                <span>or use your email for registration</span>
+                <input type="text" placeholder="Name" />
+                <input type="email" placeholder="Email" />
+                <input type="password" placeholder="Password" />
+                <button>Sign Up</button>
+            </form>
+        </div>
+        <div class="form-container sign-in-container">
+            <form action="/signup" enctype="multipart/form-data" method="POST">
+                <h1>Sign Up!</h1>
+                <!-- <div class="social-container">
+                    <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social"><i class="fab fa-google-plus-g"></i></a>
+                    <a href="#" class="social"><i class="fab fa-linkedin-in"></i></a>
+                </div> -->
+                <!-- <span>or use your account</span> -->
+                <input type="email" name="email" placeholder="Email" />
+                <input type="password" name="password1" placeholder="Password" />
+                <input type="password" name="password2" placeholder="Confirm Password" />
+                <a href="{{ url_for('index') }}">Or Login?</a>
+                <button>Sign Up</button>
+            </form>
+        </div>
+        <div class="overlay-container">
+            <div class="overlay">
+                <div class="overlay-panel overlay-left">
+                    <h1>Welcome Back!</h1>
+                    <p>To keep connected with us please login with your personal info</p>
+                    <button class="ghost" id="signIn">Sign In</button>
+                </div>
+                <div class="overlay-panel overlay-right">
+                    <img src="{{ url_for('video_feed') }}" style="
+                        width: 100%;
+                        height: 100%;
+                        max-width: 100%;
+                        object-fit: contain;" alt="">
+                    <!-- <h1>Hello, Friend!</h1>
+                    <p>Enter your personal details and start journey with us</p>
+                    <button class="ghost" id="signUp">Sign Up</button> -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+        
 </body>
 </html>
