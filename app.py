@@ -1,4 +1,4 @@
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response, request, redirect, url_for
 from imutils.video import VideoStream
 from pyimagesearch.motion_detection import SingleMotionDetector
 import threading
@@ -7,7 +7,8 @@ import datetime
 import imutils
 import time
 import cv2
-
+import re  # regex matching for email
+import usersData from db
 # initialize the output frame and a lock used to ensure thread-safe
 # exchanges of the output frames (useful for multiple browsers/tabs
 # are viewing tthe stream)
@@ -79,9 +80,30 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/signup')
+@app.route('/signup', methods=['POST', 'GET'])
 def signup():
-    return render_template('signup.html')
+    if request.method == "GET":
+        return render_template('signup.html')
+
+    if request.method == "POST":
+        print("Received POST request")
+        try:
+            email = request.form['email']
+            password = str(request.form['password1'])
+            confirm_password = str(request.form['password2'])
+        except:
+            return redirect(url_for('signup'))  # signup fail
+
+        regex = '\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b'
+        if(not re.search(regex, email)):  # invalid email
+            return redirect(url_for('signup'))  # signup fail
+
+        if password != confirm_password:
+            return redirect(url_for('signup'))  # signup fail
+
+        # # compute embeddings from image clicked by user
+        # img = 'dsad.jpg'
+        usersData.add(email, password)
 
 
 def generate():
@@ -114,9 +136,29 @@ def video_feed():
     return Response(generate(), mimetype="multipart/x-mixed-replace; boundary=frame")
 
 
-@app.route('/login')
+@app.route('/login', methods=['POST', 'GET'])
 def login():
-    return render_template('login.html')
+    if request.method == "GET":
+        return render_template('login.html')
+
+    if request.method == "POST":
+        try:
+            email = str(request.form['email'])
+            password = str(request.form['password'])
+            if email in usersData.keys():
+                if password == usersData[email]:
+                    pass
+                else:
+                    return redirect(url_for('login'))  # login fail
+            else:
+                return redirect(url_for('login'))  # login fail
+        except:
+            return redirect(url_for('login'))  # login fail
+
+
+@app.route('/home', methods=['GET'])
+def home():
+    return render_template('home.html')
 
 
 # check to see if this is the main thread of execution
