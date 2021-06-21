@@ -8,7 +8,7 @@ import imutils
 import time
 import cv2
 import re  # regex matching for email
-import usersData from db
+import json
 # initialize the output frame and a lock used to ensure thread-safe
 # exchanges of the output frames (useful for multiple browsers/tabs
 # are viewing tthe stream)
@@ -19,7 +19,7 @@ app = Flask(__name__)
 
 # initialize the video stream and allow the camera sensor to
 # warmup
-#vs = VideoStream(usePiCamera=1).start()
+# vs = VideoStream(usePiCamera=1).start()
 vs = VideoStream(src=0).start()
 time.sleep(2.0)
 
@@ -86,24 +86,38 @@ def signup():
         return render_template('signup.html')
 
     if request.method == "POST":
-        print("Received POST request")
+        # print("*** SIGNUP REQUEST RECEIVED **")
         try:
-            email = request.form['email']
+            email = str(request.form['email'])
             password = str(request.form['password1'])
             confirm_password = str(request.form['password2'])
+            # print(email)
+            # print(password)
+            # print(confirm_password)
+
+            if password != confirm_password:
+                # print('Passwords dont match')
+                return redirect(url_for('signup'))  # signup fail
+
+            # # compute embeddings from image clicked by user
+            # img = 'dsad.jpg'
+            with open('db.json', 'r') as f:
+                dbDataDict = json.loads(f.read())
+            dbDataDict[email] = password
+
+            with open('db.json', 'w') as f:
+                json.dump(dbDataDict, f)
+            # dbDataJson = json.dumps(dbData)
+            # print("Db data json: ", dbDataJson)
+            # with open("db.json", "w") as outfile:
+            #     print("Inside with open")
+            #     json.dump(dbDataJson, outfile)
+            f.close()
+            # outfile.close()
+            # print("SignUp Successful!")
+            return redirect(url_for('index'))
         except:
             return redirect(url_for('signup'))  # signup fail
-
-        regex = '\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b'
-        if(not re.search(regex, email)):  # invalid email
-            return redirect(url_for('signup'))  # signup fail
-
-        if password != confirm_password:
-            return redirect(url_for('signup'))  # signup fail
-
-        # # compute embeddings from image clicked by user
-        # img = 'dsad.jpg'
-        usersData.add(email, password)
 
 
 def generate():
@@ -142,18 +156,25 @@ def login():
         return render_template('login.html')
 
     if request.method == "POST":
+        # print("*** LOGIN REQUEST RECEIVED **")
         try:
             email = str(request.form['email'])
             password = str(request.form['password'])
-            if email in usersData.keys():
-                if password == usersData[email]:
-                    pass
+            with open('db.json', 'r') as f:
+                dbDataDict = json.loads(f.read())
+            if email in dbDataDict.keys():
+                print("User exists")
+                if password == dbDataDict[email]:
+                    return redirect(url_for('home'))
                 else:
-                    return redirect(url_for('login'))  # login fail
+                    print("Login fail")
+                    return redirect(url_for('index'))  # login fail
             else:
-                return redirect(url_for('login'))  # login fail
+                print("Login fail")
+                return redirect(url_for('index'))  # login fail
         except:
-            return redirect(url_for('login'))  # login fail
+            print("Login fail")
+            return redirect(url_for('index'))  # login fail
 
 
 @app.route('/home', methods=['GET'])
