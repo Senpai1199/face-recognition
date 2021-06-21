@@ -14,43 +14,49 @@ import time
 import cv2
 import os
 from scipy.ndimage.filters import gaussian_filter
-from PIL import Image, ImageChops 
+from PIL import Image, ImageChops
+from datetime import datetime
+from color_magic import color_confidence
 
 # construct the argument parser and parse the arguments
-ap = argparse.ArgumentParser()
-ap.add_argument("-d", "--detector", required=True,
-	help="path to OpenCV's deep learning face detector")
-ap.add_argument("-m", "--embedding-model", required=True,
-	help="path to OpenCV's deep learning face embedding model")
-ap.add_argument("-r", "--recognizer", required=True,
-	help="path to model trained to recognize faces")
-ap.add_argument("-l", "--le", required=True,
-	help="path to label encoder")
-ap.add_argument("-c", "--confidence", type=float, default=0.5,
-	help="minimum probability to filter weak detections")
-ap.add_argument("-u","--username", required=True,
-	help="Username of the person logging in.")
-args = vars(ap.parse_args())
+# ap = argparse.ArgumentParser()
+# ap.add_argument("-d", "--detector", required=True,
+# 	help="path to OpenCV's deep learning face detector")
+# ap.add_argument("-m", "--embedding-model", required=True,
+# 	help="path to OpenCV's deep learning face embedding model")
+# ap.add_argument("-r", "--recognizer", required=True,
+# 	help="path to model trained to recognize faces")
+# ap.add_argument("-l", "--le", required=True,
+# 	help="path to label encoder")
+# ap.add_argument("-c", "--confidence", type=float, default=0.5,
+# 	help="minimum probability to filter weak detections")
+# args = vars(ap.parse_args())
 
 # load our serialized face detector from disk
-print("[INFO] loading face detector...")
-protoPath = os.path.sep.join([args["detector"], "deploy.prototxt"])
-modelPath = os.path.sep.join([args["detector"],
+# print("[INFO] loading face detector...")
+# protoPath = os.path.sep.join([args["detector"], "deploy.prototxt"])
+# modelPath = os.path.sep.join([args["detector"],
+	# "res10_300x300_ssd_iter_140000.caffemodel"])
+# detector = cv2.dnn.readNetFromCaffe(protoPath, modelPath)
+
+protoPath = os.path.sep.join(["face_detection_model", "deploy.prototxt"])
+modelPath = os.path.sep.join(["face_detection_model",
 	"res10_300x300_ssd_iter_140000.caffemodel"])
 detector = cv2.dnn.readNetFromCaffe(protoPath, modelPath)
 
 # load our serialized face embedding model from disk
 print("[INFO] loading face recognizer...")
-embedder = cv2.dnn.readNetFromTorch(args["embedding_model"])
+# embedder = cv2.dnn.readNetFromTorch(args["embedding_model"])
+embedder = cv2.dnn.readNetFromTorch("openface_nn4.small2.v1.t7")
 
 # logic to get the name from email-id
 username = 	get_username()
 processed_name = username.split('@')[0]
 
 # load the actual face recognition model along with the label encoder
-recognizer = pickle.loads(open('output/'+processed_name+'.pickle', "rb").read()) ###################
-# print(recognizer)
-le = pickle.loads(open(args["le"], "rb").read())
+# recognizer = pickle.loads(open(args["recognizer"], "rb").read())
+recognizer = pickle.loads(open("output/recognizer.pickle", "rb").read())
+le = pickle.loads(open("output/le.pickle", "rb").read())
 
 # initialize the video stream, then allow the camera sensor to warm up
 print("[INFO] starting video stream...")
@@ -61,8 +67,10 @@ time.sleep(2.0)
 fps = FPS().start()
 face_colors_init = (0,0,0)
 bg_colors_init = (0,0,0)
-frame_init = 0
 frames = []
+faces = []
+bgs = []
+THRESHHOLD_FACE = 0.5
 
 
 # loop over frames from the video file stream
@@ -93,7 +101,7 @@ while True:
 		confidence = detections[0, 0, i, 2]
 
 		# filter out weak detections
-		if confidence > args["confidence"]:
+		if confidence > THRESHHOLD_FACE:
 			# compute the (x, y)-coordinates of the bounding box for
 			# the face
 			box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
@@ -132,34 +140,31 @@ while True:
 			name = processed_name
 
 			# draw the bounding box of the face along with the
-			# associated probability
-			text = "{}: {:.2f}%".format(name, cos_sim * 100)
-			y = startY - 10 if startY - 10 > 10 else startY + 10
-			cv2.rectangle(frame, (startX, startY), (endX, endY),
-				(0, 0, 255), 2)
-			cv2.putText(frame, text, (startX, y),
-				cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
+			# # associated probability
+			# text = "{}: {:.2f}%".format(name, proba * 100)
+			# y = startY - 10 if startY - 10 > 10 else startY + 10
+			# cv2.rectangle(frame, (startX, startY), (endX, endY),
+			# 	(0, 0, 255), 2)
+			# cv2.putText(frame, text, (startX, y),
+			# 	cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
 
-			bg = frame.copy()
-			cv2.rectangle(bg, (startX, startY), (endX, endY), (0,0,0), -1)
+			# bg = frame.copy()[0:endY, :]
+			# cv2.rectangle(bg, (startX, startY), (endX, endY), (0,0,0), -1)
 
-			if np.all(face_colors_init) == 0:
-				face_colors_init = np.mean(face, axis=(0, 1))
-				bg_colors_init = np.sum(bg, axis=(0, 1))/(bg.shape[0]*bg.shape[1] - face.shape[0]*face.shape[1])
-				frame_init = frame.copy()
+			# if np.all(face_colors_init) == 0:
+			# 	face_colors_init = np.mean(face, axis=(0, 1))
+			# 	bg_colors_init = np.sum(bg, axis=(0, 1))/(bg.shape[0]*bg.shape[1] - face.shape[0]*face.shape[1])
 			
-			frames.append(frame)
-			if len(frames) > 40:
-				# print(np.array(frames).shape)
+			frames.append((frame, (startX, startY, endX, endY)))
+			faces.append(face)
+			bgs.append(frame)
+
+			while len(frames) > max(fps._numFrames/(datetime.now() - fps._start).total_seconds(), 5):
+				# print(np.array(frames).shape)~
 				del(frames[0])
 				# frame = np.mean(frames, axis=(0))
 				# print(np.array(frame).shape)
 
-			face_colors = np.mean(face, axis=(0, 1))
-			bg_colors = np.sum(bg, axis=(0, 1))/(bg.shape[0]*bg.shape[1] - face.shape[0]*face.shape[1])
-
-			# print
-			# print(face.shape, type(face), np.subtract(face_colors, face_colors_init), np.subtract(bg_colors, bg_colors_init))
 
 	# update the FPS counter
 	fps.update()
@@ -181,9 +186,42 @@ while True:
 	# np.absolute(frame)
 
 	# frame = frames[0] - frames[-1]
-	frame = ImageChops.subtract(Image.fromarray(frames[-1]), Image.fromarray(frame_init), scale=0.1)
-	# print(np.array(frames)[0].shape, '$')
-	cv2.imshow("Frame", np.array(frame))
+
+	# colors, count = np.unique(bg_diff.reshape(-1,bg_diff.shape[-1]), axis=0, return_counts=True)
+	# fcolors, fcount = np.unique(face_diff.reshape(-1,face_diff.shape[-1]), axis=0, return_counts=True)
+
+	# if len(fcount > 0):
+	# 	mx = fcolors[fcount.argmax()]
+	# 	while sum(mx) < 10:
+	# 		i = fcount.argmax()
+	# 		fcolors = np.delete(fcolors, i)
+	# 		fcount = np.delete(fcount, i)
+	# 		if len(fcount) == 0:
+	# 			break
+	# 		mx = fcolors[fcount.argmax()]
+	# print(colors[count.argmax()], fcolors[fcount.argmax()])
+
+	try:
+		face_diff = np.array(ImageChops.subtract(Image.fromarray(faces[-1]), Image.fromarray(faces[0]), scale=0.2))
+		bg_diff = np.array(ImageChops.subtract(Image.fromarray(bgs[-1]), Image.fromarray(bgs[0]), scale=0.2))
+		frame_diff = np.array(ImageChops.subtract(Image.fromarray(frames[-1][0]), Image.fromarray(frames[0][0]), scale=0.2))
+		face_colors = np.mean(face_diff, axis=(0,1))
+		bg_colors = np.mean(bg_diff, axis=(0,1))
+	
+		try:
+			print(color_confidence(frames, threshhold=60, scale=0.1))
+		except:
+			pass
+		cv2.rectangle(frame, (int(0),int(0)), (int(100),int(100)), tuple(map(int, face_colors)), -1)
+		cv2.rectangle(frame, (int(50),int(0)), (int(100),int(100)), tuple(map(int, bg_colors)), -1)
+	except:
+		pass
+	
+	# cv2.rectangle(bg, (int(0),int(0)), (int(100),int(100)), tuple(map(int, face_colors)), -1)
+	# cv2.rectangle(bg, (int(50),int(0)), (int(100),int(100)), tuple(map(int, bg_colors)), -1)
+	# print(color_confidence(frames, threshhold=60, scale=0.2))
+	
+	cv2.imshow("Frame", np.array(frame_diff))
 	key = cv2.waitKey(1) & 0xFF
 
 	# if the `q` key was pressed, break from the loop

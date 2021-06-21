@@ -6,13 +6,14 @@
     top: 0;
     bottom: 0;
     position: absolute;
-  background: linear-gradient(124deg, #e81d1d, #e8b71d, #e3e81d, #1de840, #1ddde8, #2b1de8, #dd00f3, #dd00f3);
+  background: linear-gradient(124deg, #e81d1d, #e81d1d, #e3e81d, #1de840, #1ddde8, #dd00f3, #e81d1d, #e3e81d, #e81d1d);
+  /* background: linear-gradient(124deg, #e81d1d, #e81d1d, #e3e81d, #1ddde8, #e81d1d, #e3e81d); */
   background-size: 1800% 1800%;
   
-  -webkit-animation: rainbow 18s ease infinite;
-  -z-animation: rainbow 18s ease infinite;
-  -o-animation: rainbow 18s ease infinite;
-    animation: rainbow 18s ease infinite;}
+  -webkit-animation: rainbow 5s ease infinite;
+  -z-animation: rainbow 5s ease infinite;
+  -o-animation: rainbow 5s ease infinite;
+    animation: rainbow 5s ease infinite;}
   
   @-webkit-keyframes rainbow {
       0%{background-position:0% 82%}
