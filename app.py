@@ -45,10 +45,10 @@ def detect_motion(frameCount):
         gray = cv2.GaussianBlur(gray, (7, 7), 0)
 
         # grab the current timestamp and draw it on the frame
-        timestamp = datetime.datetime.now()
-        cv2.putText(frame, timestamp.strftime(
-            "%A %d %B %Y %I:%M:%S%p"), (10, frame.shape[0] - 10),
-            cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
+        # timestamp = datetime.datetime.now()
+        # cv2.putText(frame, timestamp.strftime(
+        #     "%A %d %B %Y %I:%M:%S%p"), (10, frame.shape[0] - 10),
+        #     cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
 
         # if the total number of frames has reached a sufficient
         # number to construct a reasonable background model, then
@@ -116,7 +116,7 @@ def signup():
             f.close()
             # outfile.close()
             # print("SignUp Successful!")
-            time.sleep(2)
+            time.sleep(1)
             return redirect(url_for('index'))
         except:
             return redirect(url_for('signup'))  # signup fail
@@ -167,7 +167,7 @@ def login():
             if email in dbDataDict.keys():
                 print("User exists")
                 if password == dbDataDict[email]:
-                    time.sleep(2)
+                    time.sleep(1)
                     return redirect(url_for('home'))
                 else:
                     print("Login fail")

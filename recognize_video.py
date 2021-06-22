@@ -55,7 +55,8 @@ embedder = cv2.dnn.readNetFromTorch("openface_nn4.small2.v1.t7")
 
 # load the actual face recognition model along with the label encoder
 # recognizer = pickle.loads(open(args["recognizer"], "rb").read())
-recognizer = pickle.loads(open("output/recognizer.pickle", "rb").read())
+recognizer = pickle.loads(open("output/hamza.pickle", "rb").read())
+recognizer2 = pickle.loads(open("output/nothamza.pickle", "rb").read())
 le = pickle.loads(open("output/le.pickle", "rb").read())
 
 # initialize the video stream, then allow the camera sensor to warm up
@@ -70,6 +71,7 @@ bg_colors_init = (0,0,0)
 frames = []
 faces = []
 bgs = []
+color_vals = []
 THRESHHOLD_FACE = 0.5
 
 
@@ -127,26 +129,30 @@ while True:
 			# perform classification to recognize the face
 			# print(vec)
 			# diff = np.cosine_similarity(vec[0],recognizer["embeddings"])
-			# a = vec[0]
-			# b = recognizer["embeddings"][0]
-			# # print(a.shape,"        ",len(b))
-			# cos_sim = np.dot(a, b)/(np.linalg.norm(a)*np.linalg.norm(b))
-			# print(cos_sim)
+			a = vec[0]
+			b = recognizer["embeddings"][0]
+			b2 = recognizer2["embeddings"][0]
+			# print(a.shape,"        ",len(b))
+			cos_sim = np.dot(a, b)/(np.linalg.norm(a)*np.linalg.norm(b))
+			cos_sim2 = np.dot(a, b2)/(np.linalg.norm(a)*np.linalg.norm(b2))
+			print(cos_sim)
+			text = 'hamza: {:.2f}'.format(cos_sim*100) if cos_sim > 0.75 or cos_sim2 > 0.5 else 'unauthorized'
 
-			# # preds = recognizer.predict_proba(vec)[0]
-			# # j = np.argmax(preds)
-			# # proba = preds[j]
-			# # name = le.classes_[j]
+			faceframe = frame.copy()
+			# preds = recognizer.predict_proba(vec)[0]
+			# j = np.argmax(preds)
+			# proba = preds[j]
+			# name = le.classes_[j]
 			# name = processed_name
 
 			# draw the bounding box of the face along with the
 			# # associated probability
-			# text = "{}: {:.2f}%".format(name, proba * 100)
-			# y = startY - 10 if startY - 10 > 10 else startY + 10
-			# cv2.rectangle(frame, (startX, startY), (endX, endY),
-			# 	(0, 0, 255), 2)
-			# cv2.putText(frame, text, (startX, y),
-			# 	cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
+			# text = "{}: {:.2f}%".format(text, cos_sim * 100)
+			y = startY - 10 if startY - 10 > 10 else startY + 10
+			cv2.rectangle(faceframe, (startX, startY), (endX, endY),
+				(0, 0, 255), 2)
+			cv2.putText(faceframe, text.upper(), (10, 30),
+				cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
 
 			# bg = frame.copy()[0:endY, :]
 			# cv2.rectangle(bg, (startX, startY), (endX, endY), (0,0,0), -1)
@@ -204,21 +210,22 @@ while True:
 	try:
 		face_diff = np.array(ImageChops.subtract(Image.fromarray(faces[-1]), Image.fromarray(faces[0]), scale=0.2))
 		bg_diff = np.array(ImageChops.subtract(Image.fromarray(bgs[-1]), Image.fromarray(bgs[0]), scale=0.2))
-		frame_diff = np.array(ImageChops.subtract(Image.fromarray(frames[-1][0]), Image.fromarray(frames[0][0]), scale=0.2))
+		frame_diff = np.array(ImageChops.subtract(Image.fromarray(frames[-1][0]), Image.fromarray(frames[0][0]), scale=0.15))
 		face_colors = np.mean(face_diff, axis=(0,1))
 		face_colors *= 2
 		bg_colors = np.mean(bg_diff, axis=(0,1))
 	
 		try:
-			color_val = color_confidence(frames, threshhold=60, scale=0.1)
-			color_text = "REAL HUMAN" if color_val else "FAKE HUMAN"
+			color_val = color_confidence(frames, threshhold=60, scale=0.12)
+			color_vals.append(color_val)
+			color_text = "REAL" if np.average(color_vals[-20:], weights=list(range(20))) >= 0.23 else "FAKE"
 		except:
 			pass
 		# cv2.rectangle(frame, (int(0),int(0)), (int(100),int(100)), tuple(map(int, face_colors)), -1)
 		# cv2.rectangle(frame, (int(50),int(0)), (int(100),int(100)), tuple(map(int, bg_colors)), -1)
 
 		cv2.rectangle(frame, (startX, startY), (endX, endY), face_colors, 3)
-		cv2.putText(frame, color_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, face_colors, 2)
+		cv2.putText(frame, color_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,200*(color_text == "REAL"),200*(color_text == "FAKE")), 2)
 	except:
 		pass
 	
@@ -226,7 +233,7 @@ while True:
 	# cv2.rectangle(bg, (int(50),int(0)), (int(100),int(100)), tuple(map(int, bg_colors)), -1)
 	# print(color_confidence(frames, threshhold=60, scale=0.2))
 	
-	cv2.imshow("Frame", np.append(frame, np.array(frame_diff), axis=0))
+	cv2.imshow("Frame", np.append(faceframe, np.array(frame_diff), axis=0))
 	key = cv2.waitKey(1) & 0xFF
 
 	# if the `q` key was pressed, break from the loop
