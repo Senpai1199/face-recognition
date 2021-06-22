@@ -206,14 +206,19 @@ while True:
 		bg_diff = np.array(ImageChops.subtract(Image.fromarray(bgs[-1]), Image.fromarray(bgs[0]), scale=0.2))
 		frame_diff = np.array(ImageChops.subtract(Image.fromarray(frames[-1][0]), Image.fromarray(frames[0][0]), scale=0.2))
 		face_colors = np.mean(face_diff, axis=(0,1))
+		face_colors *= 2
 		bg_colors = np.mean(bg_diff, axis=(0,1))
 	
 		try:
-			print(color_confidence(frames, threshhold=60, scale=0.1))
+			color_val = color_confidence(frames, threshhold=60, scale=0.1)
+			color_text = "REAL HUMAN" if color_val else "FAKE HUMAN"
 		except:
 			pass
-		cv2.rectangle(frame, (int(0),int(0)), (int(100),int(100)), tuple(map(int, face_colors)), -1)
-		cv2.rectangle(frame, (int(50),int(0)), (int(100),int(100)), tuple(map(int, bg_colors)), -1)
+		# cv2.rectangle(frame, (int(0),int(0)), (int(100),int(100)), tuple(map(int, face_colors)), -1)
+		# cv2.rectangle(frame, (int(50),int(0)), (int(100),int(100)), tuple(map(int, bg_colors)), -1)
+
+		cv2.rectangle(frame, (startX, startY), (endX, endY), face_colors, 3)
+		cv2.putText(frame, color_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, face_colors, 2)
 	except:
 		pass
 	
@@ -221,7 +226,7 @@ while True:
 	# cv2.rectangle(bg, (int(50),int(0)), (int(100),int(100)), tuple(map(int, bg_colors)), -1)
 	# print(color_confidence(frames, threshhold=60, scale=0.2))
 	
-	cv2.imshow("Frame", np.array(frame_diff))
+	cv2.imshow("Frame", np.append(frame, np.array(frame_diff), axis=0))
 	key = cv2.waitKey(1) & 0xFF
 
 	# if the `q` key was pressed, break from the loop
