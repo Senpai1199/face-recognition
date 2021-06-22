@@ -4,11 +4,40 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100&display=swap" rel="stylesheet">
+    <script type="text/javascript" src="{{url_for('static', filename='confetti.js')}}"></script>
+    <style>
+        *{
+            padding: 0;
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+        }
+        .main h1 {
+            font-size: 50px;
+        }
+
+    </style>
     <title>Home Page</title>
 </head>
 <body>
-    <div style="margin: 0 auto;">
-        <h1 style="text-align: center;">Successfully logged in!</h1>
+    <div class="main">
+        <h1>Successfully logged in!</h1>
     </div>
+    <script>
+        const start = () => {
+            setTimeout(function() {
+                confetti.start();
+            }, 1000); // 1000 is time that after 1 second start the confetti ( 1000 = 1 sec)
+        };    
+        start();
+    </script>
 </body>
+
 </html>

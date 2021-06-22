@@ -38,7 +38,7 @@
                     <a href="#" class="social"><i class="fab fa-linkedin-in"></i></a>
                 </div> -->
                 <!-- <span>or use your account</span> -->
-                <input type="email" name="email" placeholder="Email" />
+                <input type="email" id="email" name="email" placeholder="Email" />
                 <input type="password" name="password" placeholder="Password" />
                 <a href="{{ url_for('signup') }}">Or Register?</a>
                 <button>Sign In</button>
@@ -54,12 +54,10 @@
                 <div class="overlay-panel overlay-right">
                     <img src="{{ url_for('video_feed') }}" style="
                         width: 100%;
-                        height: 100%;
+                        height: 50%;
                         max-width: 100%;
-                        object-fit: contain;" alt="">
-                    <!-- <h1>Hello, Friend!</h1>
-                    <p>Enter your personal details and start journey with us</p>
-                    <button class="ghost" id="signUp">Sign Up</button> -->
+                        object-fit: contain;">
+                    <button id="greenCheck" style="font-size: 16px; display: none;">✅</button>
                 </div>
             </div>
         </div>
@@ -72,5 +70,15 @@
             var theCSSprop = window.getComputedStyle(elem, null).getPropertyValue("background");
             console.log(theCSSprop);
         }
+        var emailElement = document.getElementById("email");
+        emailElement.addEventListener("blur", function() {
+            setTimeout(function() {
+                if (emailElement.value !== '') {
+                    console.log("User exited email field")
+                    greenCheckButton = document.getElementById('greenCheck')
+                    greenCheckButton.style.display = null;
+                }
+            }, 1000);
+        });
     </script>
 </html>

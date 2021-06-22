@@ -9,6 +9,7 @@ import time
 import cv2
 import re  # regex matching for email
 import json
+import time
 # initialize the output frame and a lock used to ensure thread-safe
 # exchanges of the output frames (useful for multiple browsers/tabs
 # are viewing tthe stream)
@@ -115,6 +116,7 @@ def signup():
             f.close()
             # outfile.close()
             # print("SignUp Successful!")
+            time.sleep(2)
             return redirect(url_for('index'))
         except:
             return redirect(url_for('signup'))  # signup fail
@@ -165,6 +167,7 @@ def login():
             if email in dbDataDict.keys():
                 print("User exists")
                 if password == dbDataDict[email]:
+                    time.sleep(2)
                     return redirect(url_for('home'))
                 else:
                     print("Login fail")
