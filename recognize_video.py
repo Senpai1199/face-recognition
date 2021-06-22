@@ -50,8 +50,8 @@ print("[INFO] loading face recognizer...")
 embedder = cv2.dnn.readNetFromTorch("openface_nn4.small2.v1.t7")
 
 # logic to get the name from email-id
-username = 	get_username()
-processed_name = username.split('@')[0]
+# username = 	get_username()
+# processed_name = username.split('@')[0]
 
 # load the actual face recognition model along with the label encoder
 # recognizer = pickle.loads(open(args["recognizer"], "rb").read())
@@ -127,17 +127,17 @@ while True:
 			# perform classification to recognize the face
 			# print(vec)
 			# diff = np.cosine_similarity(vec[0],recognizer["embeddings"])
-			a = vec[0]
-			b = recognizer["embeddings"][0]
-			# print(a.shape,"        ",len(b))
-			cos_sim = np.dot(a, b)/(np.linalg.norm(a)*np.linalg.norm(b))
-			print(cos_sim)
+			# a = vec[0]
+			# b = recognizer["embeddings"][0]
+			# # print(a.shape,"        ",len(b))
+			# cos_sim = np.dot(a, b)/(np.linalg.norm(a)*np.linalg.norm(b))
+			# print(cos_sim)
 
-			# preds = recognizer.predict_proba(vec)[0]
-			# j = np.argmax(preds)
-			# proba = preds[j]
-			# name = le.classes_[j]
-			name = processed_name
+			# # preds = recognizer.predict_proba(vec)[0]
+			# # j = np.argmax(preds)
+			# # proba = preds[j]
+			# # name = le.classes_[j]
+			# name = processed_name
 
 			# draw the bounding box of the face along with the
 			# # associated probability
